@@ -165,13 +165,12 @@ void Simulator::send_receive(Node* node) {
 	}
 
 	int data = 0;
-	Packet* temp;
+	Packet* temp = NULL;
 	while (!node->memory.empty()) {
 		temp = node->memory.front();
-		node->memory.pop();
-
 		data += temp->size - PACKET_HEADER;
 		delete temp;
+		node->memory.pop();
 	}
 
 	Packet* packet = NULL;
@@ -187,6 +186,9 @@ void Simulator::send_receive(Node* node) {
 		node->memory.push(packet);
 	}
 
+	if (node->mode == ANCHOR)
+		return;
+
 	while (!node->memory.empty()) {
 		packet = node->memory.front();
 		for (int i = 0; i < node->neighbor.size(); i++) {
@@ -199,8 +201,11 @@ void Simulator::send_receive(Node* node) {
 			if (!node->neighbor[i]->consume_energy(node->calc_recv_energy(packet->size))) {
 				continue;
 			}
-			if(packet->to == node->neighbor[i]->id)
+			if (packet->to == node->neighbor[i]->id) {
+				packet->from = packet->to;
+				packet->to = node->neighbor[i]->routing();
 				node->neighbor[i]->memory.push(packet);
+			}
 		}
 		node->memory.pop();
 	}
@@ -225,7 +230,7 @@ void Simulator::start_simulator() {
 
 			for (int i = 0; i < NODES; i++) {
 				temp = task.front();
-				task.pop_front();
+				
 
 				if (temp->consume_energy(temp->active_energy * DUTY_CYCLE * 60)) {
 					if (time % SENSING == 0)
@@ -233,11 +238,18 @@ void Simulator::start_simulator() {
 					send_receive(temp);
 				};
 				temp->consume_energy(temp->sleep_energy * (1 - DUTY_CYCLE) * 60);
+				task.pop_front();
 			}
 		}
 		printf("-");
 	}
 	printf("\n");
+
+	int num_data = 0;
+	for (int i = 0; i < NODES; i++) {
+		num_data += nodes[i]->memory.size();
+	}
+	printf("num_data : %d\n", num_data);
 
 	printf("The End\n");
 }
