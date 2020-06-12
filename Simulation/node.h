@@ -39,7 +39,8 @@ public:
 
 	int line_is_right;								// 라인이 오른쪽인지 왼쪽인지	// 오른쪽이면 1 왼쪽이면 0
 
-	std::queue<Packet*> memory;
+	//std::queue<Packet*> memory;
+	Packet* memory;
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 	Node* anchor;								// 앵커 노드(인라인 노드에서 사용)

@@ -21,6 +21,7 @@ Node::Node() {
 	line_is_right = 0;
 	
 	anchor = NULL;
+	memory = NULL;
 }
 
 Node::Node(FILE* fp) {
@@ -89,11 +90,16 @@ void Node::sensing() {
 		return;
 	}
 
+	if (memory != NULL) {
+		memory->size += SENSING_DATA;
+		return;
+	}
+
 	Packet* packet = new Packet;
 
 	packet->from = this->id;
 	packet->to = routing();
-	packet->size = SENSING_DATA + PACKET_HEADER;
+	packet->size = SENSING_DATA;
 	
-	memory.push(packet);
+	memory = packet;
 }

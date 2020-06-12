@@ -4,7 +4,7 @@
 class Drone {
 	double energy;				// 현재 남은 에너지 (J)
 
-	static double max_energy;	// 최대 에너지
+	int data;
 };
 
 #endif

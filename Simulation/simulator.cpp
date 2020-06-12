@@ -164,50 +164,29 @@ void Simulator::send_receive(Node* node) {
 		return;
 	}
 
-	int data = 0;
-	Packet* temp = NULL;
-	while (!node->memory.empty()) {
-		temp = node->memory.front();
-		data += temp->size - PACKET_HEADER;
-		delete temp;
-		node->memory.pop();
-	}
-
-	Packet* packet = NULL;
-	while (data > 0) {
-		packet = new Packet;
-		packet->from = node->id;
-		packet->to = node->routing();
-		packet->size = PACKET_HEADER + PACKET_PAYLOAD;
-		if (data - PACKET_PAYLOAD < 0) {
-			packet->size = PACKET_HEADER + data;
-		}
-		data -= PACKET_PAYLOAD;
-		node->memory.push(packet);
-	}
-
 	if (node->mode == ANCHOR)
 		return;
 
-	while (!node->memory.empty()) {
-		packet = node->memory.front();
+	int data = 0;
+	while (node->memory->size > 0) {
+		data = PACKET_PAYLOAD;
+		if (node->memory->size - PACKET_PAYLOAD < 0)
+			data = node->memory->size;
 		for (int i = 0; i < node->neighbor.size(); i++) {
-			if (!node->consume_energy(node->calc_send_energy(packet->size))) {
+			if (!node->consume_energy(node->calc_send_energy(data + PACKET_HEADER))) {
 				return;
 			}
 			if (node->neighbor[i]->status != ACTIVE) {
 				continue;
 			}
-			if (!node->neighbor[i]->consume_energy(node->calc_recv_energy(packet->size))) {
+			if (!node->neighbor[i]->consume_energy(node->calc_recv_energy(data + PACKET_HEADER))) {
 				continue;
 			}
-			if (packet->to == node->neighbor[i]->id) {
-				packet->from = packet->to;
-				packet->to = node->neighbor[i]->routing();
-				node->neighbor[i]->memory.push(packet);
+			if (node->memory->to == node->neighbor[i]->id) {
+				node->neighbor[i]->memory->size += data;
 			}
 		}
-		node->memory.pop();
+		node->memory->size -= PACKET_PAYLOAD;
 	}
 }
 
@@ -218,6 +197,11 @@ void Simulator::re_packet(Node* node) {
 void Simulator::start_simulator() {
 	std::deque<Node*> task;
 	Node* temp;
+
+	for (int i = 0; i < NODES; i++) {
+		nodes[i]->sensing();
+		nodes[i]->memory->size = 0;
+	}
 	
 	for (int hour = 0; hour < 24; hour++) {
 		for (int time = 0; time < 60; time++) {
@@ -247,7 +231,7 @@ void Simulator::start_simulator() {
 
 	int num_data = 0;
 	for (int i = 0; i < NODES; i++) {
-		num_data += nodes[i]->memory.size();
+		num_data += nodes[i]->memory->size;
 	}
 	printf("num_data : %d\n", num_data);
 

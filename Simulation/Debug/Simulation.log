@@ -5,5 +5,5 @@ Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(114,20): warning C401
 Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(115,25): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
 Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(126,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
 Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(155,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(194,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(175,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
   Simulation.vcxproj -> Q:\DESlab\IdeaProjects\Simulation\Debug\Simulation.exe
