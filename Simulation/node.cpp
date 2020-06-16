@@ -20,8 +20,10 @@ Node::Node() {
 	energy = max_energy;
 	line_is_right = 0;
 	
+	data_size = 0;
+	num_data = 0;
+
 	anchor = NULL;
-	memory = NULL;
 }
 
 Node::Node(FILE* fp) {
@@ -32,9 +34,6 @@ Node::~Node() {
 
 }
 
-double Node::calc_time(double size) {
-	return size * 1 / data_rate;
-}
 
 double Node::calc_send_energy(double size) {
 	return size * tx;
@@ -44,8 +43,54 @@ double Node::calc_recv_energy(double size) {
 	return size * rx;
 }
 
-double Node::calc_sleep_energy(double time) {
-	return time * sleep_energy;
+double Node::calc_sleep_energy(Node *n, double time) {
+	double energy;
+
+	//if (n->status == SLEEP) {
+		energy = SLEEP_ENERGY * time;
+		return energy;
+	//}
+	
+	//energy = SLEEP_ENERGY * time + 
+	
+}
+
+double Node::calc_active_energy(Node* n, double time) {
+	double energy = ACTIVE_ENERGY * time;
+	return energy;
+}
+
+int Node::consume_idle_energy(Node *n) {
+	double senergy;
+	double aenergy;
+	double henergy;
+
+	senergy = Node::calc_sleep_energy(n, (1 - DUTY_CYCLE) * MIN * TR_CYCLE);
+	aenergy = Node::calc_active_energy(n, DUTY_CYCLE * MIN * TR_CYCLE);
+	henergy = Node::calc_harvest_energy(n, MIN * TR_CYCLE);
+
+	if (senergy + aenergy > henergy) {
+		n->energy = n->energy - senergy - aenergy + henergy;
+
+		if (n->energy < 0) {
+			n->energy = 0;
+			n->status = BLACKOUT;
+			return false;
+		}
+	}
+	else {
+		n->energy = n->energy - senergy - aenergy + henergy;
+
+		if (n->energy > n->max_energy) {
+			n->energy = n->max_energy;
+			return false;
+		}
+	}
+	return true;
+}
+
+double Node::calc_harvest_energy(Node* n, double time) {
+	return 0;
 }
 
 bool Node::consume_energy(double consume) {
@@ -90,16 +135,6 @@ void Node::sensing() {
 		return;
 	}
 
-	if (memory != NULL) {
-		memory->size += SENSING_DATA;
-		return;
-	}
-
-	Packet* packet = new Packet;
-
-	packet->from = this->id;
-	packet->to = routing();
-	packet->size = SENSING_DATA;
-	
-	memory = packet;
+	data_size += SENSING_DATA * (int)TR_CYCLE/SENSING;
+	num_data += (int)TR_CYCLE / SENSING;
 }

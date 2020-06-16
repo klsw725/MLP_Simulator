@@ -40,7 +40,10 @@ public:
 	int line_is_right;								// 라인이 오른쪽인지 왼쪽인지	// 오른쪽이면 1 왼쪽이면 0
 
 	//std::queue<Packet*> memory;
-	Packet* memory;
+	//Packet* memory;
+
+	int data_size;
+	double num_data;
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 	Node* anchor;								// 앵커 노드(인라인 노드에서 사용)
@@ -55,11 +58,15 @@ public:
 	static double sleep_energy;			// sleep 상태에서 소비되는 에너지
 	static double max_data_size;		// 보낼 수 있는 최대 데이터 사이즈
 
-	double calc_time(double size);
-	double calc_send_energy(double size);
-	double calc_recv_energy(double size);
+	static double calc_send_energy(double size);
+	static double calc_recv_energy(double size);
 
-	double calc_sleep_energy(double time);
+	static double calc_sleep_energy(Node *n, double time);
+	static double calc_active_energy(Node* n, double time);
+	static double calc_harvest_energy(Node* n, double time);
+
+	static int consume_idle_energy(Node* n);
+	
 
 	bool consume_energy(double consume);
 

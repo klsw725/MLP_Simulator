@@ -1,9 +1,14 @@
 ﻿  simulator.cpp
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(37,14): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(38,25): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(114,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(115,25): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(126,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(155,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-Q:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(175,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-  Simulation.vcxproj -> Q:\DESlab\IdeaProjects\Simulation\Debug\Simulation.exe
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(39,14): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(40,25): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(116,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(117,25): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(132,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(140,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(149,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(159,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(193,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(277,46): warning C4244: '+=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(297,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+D:\DESlab\IdeaProjects\Simulation\Simulation\simulator.cpp(304,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  Simulation.vcxproj -> D:\DESlab\IdeaProjects\Simulation\Debug\Simulation.exe

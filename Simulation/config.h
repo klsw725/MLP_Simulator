@@ -1,6 +1,12 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define SEC 1
+#define MIN 60
+#define HOUR 60 * 60
+#define DAY 24
+#define MONTH 30
+
 #define FIELD_SIZE 75	// 공간의 사이즈
 #define W 5			// W, 라인의 폭
 #define G 5			// 라인을 나누는 size
@@ -13,6 +19,8 @@
 
 #define SENSING_DATA 64				// Byte
 #define SENSING		10				// Minute
+#define TR_CYCLE	10				// 전송 주기
+
 #define DUTY_CYCLE	0.01			// 비율 99:1
 
 #define TR 10								// Transmit Range
@@ -22,6 +30,9 @@
 
 #define BATTERY 200		// mAh
 #define MAX_ENERGY BATTERY * 3.6 * 3;	// J
+
+#define PANEL 1.2		// 1.2(4)
+#define HARVEST_ENERGY	
 
 //#define SOLAR
 //#define SYS 

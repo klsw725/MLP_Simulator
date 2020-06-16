@@ -29,6 +29,8 @@ public:
 
 	std::vector<Node*> nodes;					// 전체 노드 관리 벡터
 
+	Drone *drone;
+
 	void create_field();
 	void init_nodes();
 
@@ -36,16 +38,27 @@ public:
 	void set_anchor(Cell* cell);
 
 	Node* find_node_by_id(int id);
-	void send_receive(Node* node);
-	void re_packet(Node* node);
 
-	void create_packet(Node* node);
+	void sensing_all();
+	void transmit();
+	void transmit_nodes(Node* n);
+	void transmitting();
+	void receive_packet(Node *n, Packet p);
 
+	void calc_idle_energy();
+
+	void anchor_move();
+
+	void collect_data();
+	void get_data_from_anchor(Node *n);
 	void start_simulator();
+
+	std::deque<Packet> network;
 
 private:
 };
 
+void transmit_nodes(Node* n);
 
 
 #endif
