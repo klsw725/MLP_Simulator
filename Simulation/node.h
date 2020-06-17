@@ -58,15 +58,17 @@ public:
 	static double active_energy;		// active 상태에서 소비되는 에너지
 	static double sleep_energy;			// sleep 상태에서 소비되는 에너지
 	static double max_data_size;		// 보낼 수 있는 최대 데이터 사이즈
+	static std::vector<double>solar;
 
 	static double calc_send_energy(double size);
 	static double calc_recv_energy(double size);
 
 	static double calc_sleep_energy(Node *n, double time);
 	static double calc_active_energy(Node* n, double time);
-	static double calc_harvest_energy(Node* n, double time);
+	static double calc_harvest_energy(Node* n, int time);
+	inline static std::vector<double>& getsolar() { return solar; }
 
-	static int consume_idle_energy(Node* n);
+	static int consume_idle_energy(Node* n, int time);
 	
 
 	bool consume_energy(double consume);

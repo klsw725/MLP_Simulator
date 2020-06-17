@@ -20,9 +20,18 @@ Simulator::Simulator() {
 
 	find_inlines(*lines[0]);
 
+	routing_all();
+
 	drone = new Drone;
 
-	routing_all();
+	FILE* fp;
+	fp = fopen("solar_10min.txt", "r");
+	char inp[1024];
+	int buf_size = 1024;
+	while (fgets(inp, buf_size, fp)) {
+		Node::getsolar().push_back(atof(inp));
+	}
+	fclose(fp);
 }
 
 Simulator::~Simulator() {
@@ -296,10 +305,10 @@ void Simulator::receive_packet(Node* n, Packet p) {
 	return;
 }
 
-void Simulator::calc_idle_energy() {
+void Simulator::calc_idle_energy(int time) {
 	int i = 0;
 	for (i = 0; i < NODES; i++) {
-		Node::consume_idle_energy(nodes[i]);
+		Node::consume_idle_energy(nodes[i], time);
 	}
 }
 
@@ -336,14 +345,15 @@ void Simulator::get_data_from_anchor(Node *n) {
 void Simulator::start_simulator() {
 	int round;
 	int times;
-	for (int day = 0; day < MONTH; day++) {
-		for (round = 1; round <= DAY; round++) {
+	int day;
+	for (day = 0; day < MONTH; day++) {
+		for (round = 0; round < DAY; round++) {
 			anchor_move();
 			for (times = 0; times < HOUR/TR_CYCLE; times++) {
 				sensing_all();
 				transmit();
 				transmitting();
-				calc_idle_energy();
+				calc_idle_energy((day*DAY)+(round*HOUR/TR_CYCLE)+times);
 			}
 			collect_data();
 		}

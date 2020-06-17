@@ -8,7 +8,7 @@ double Node::data_rate = DATA_RATE;			// bytes/S -> 초당 보내는 것은 1/da
 double Node::active_energy = ACTIVE_ENERGY;		// J/s
 double Node::sleep_energy = SLEEP_ENERGY;		// J/s
 double Node::max_data_size = MAX_DATA;		// 128 바이트
-
+std::vector<double> Node::solar;
 
 
 Node::Node() {
@@ -61,14 +61,14 @@ double Node::calc_active_energy(Node* n, double time) {
 	return energy;
 }
 
-int Node::consume_idle_energy(Node *n) {
+int Node::consume_idle_energy(Node *n, int time) {
 	double senergy;
 	double aenergy;
 	double henergy;
 
 	senergy = Node::calc_sleep_energy(n, (1 - DUTY_CYCLE) * MIN * TR_CYCLE);
 	aenergy = Node::calc_active_energy(n, DUTY_CYCLE * MIN * TR_CYCLE);
-	henergy = Node::calc_harvest_energy(n, MIN * TR_CYCLE);
+	henergy = Node::calc_harvest_energy(n, time);
 
 	if (senergy + aenergy > henergy) {
 		n->energy = n->energy - senergy - aenergy + henergy;
@@ -90,8 +90,14 @@ int Node::consume_idle_energy(Node *n) {
 	return true;
 }
 
-double Node::calc_harvest_energy(Node* n, double time) {
-	return 0;
+double Node::calc_harvest_energy(Node* n, int time) {
+	double energy = 0;
+
+	int i = time % solar.size();
+
+	energy += solar[i];
+
+	return energy;
 }
 
 bool Node::consume_energy(double consume) {

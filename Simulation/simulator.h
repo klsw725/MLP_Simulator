@@ -47,7 +47,7 @@ public:
 	void transmitting();
 	void receive_packet(Node *n, Packet p);
 
-	void calc_idle_energy();
+	void calc_idle_energy(int time);
 
 	void anchor_move();
 

@@ -17,7 +17,7 @@
 #define PACKET_PAYLOAD 104			// Byte
 #define MAX_DATA 128				// Byte (Packet_Header + Packet_Payload)
 
-#define SENSING_DATA 64				// Byte
+#define SENSING_DATA 80				// Byte
 #define SENSING		2				// Minute
 #define TR_CYCLE	10				// 전송 주기
 
@@ -32,7 +32,7 @@
 #define MAX_ENERGY BATTERY * 3.6 * 3;	// J
 
 #define PANEL 1.2		// 1.2(4)
-#define HARVEST_ENERGY	
+//#define HARVEST_ENERGY	
 
 //#define SOLAR
 //#define SYS 
