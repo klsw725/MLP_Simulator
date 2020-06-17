@@ -3,7 +3,7 @@
 
 #define SEC 1
 #define MIN 60
-#define HOUR 60 * 60
+#define HOUR 60
 #define DAY 24
 #define MONTH 30
 
@@ -18,7 +18,7 @@
 #define MAX_DATA 128				// Byte (Packet_Header + Packet_Payload)
 
 #define SENSING_DATA 64				// Byte
-#define SENSING		10				// Minute
+#define SENSING		2				// Minute
 #define TR_CYCLE	10				// 전송 주기
 
 #define DUTY_CYCLE	0.01			// 비율 99:1
@@ -28,7 +28,7 @@
 #define RX  0.00000018912;					// rx energy J/byte
 #define DATA_RATE  31250.0;			// bytes/S -> 초당 보내는 것은 1/data_rate
 
-#define BATTERY 200		// mAh
+#define BATTERY 100		// mAh
 #define MAX_ENERGY BATTERY * 3.6 * 3;	// J
 
 #define PANEL 1.2		// 1.2(4)

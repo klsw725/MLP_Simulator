@@ -21,6 +21,8 @@ Simulator::Simulator() {
 	find_inlines(*lines[0]);
 
 	drone = new Drone;
+
+	routing_all();
 }
 
 Simulator::~Simulator() {
@@ -104,9 +106,9 @@ void Simulator::init_nodes() {
 			if (field[y][x]) {
 				nodes[index]->id = index;
 				nodes[index]->set_locate(x, y);
-				if (x > lines[0]->end)
+				if (x > FIELD_SIZE/2)
 					nodes[index]->line_is_right = 0;
-				else if (x < lines[0]->start)
+				else
 					nodes[index]->line_is_right = 1;
 				index++;
 			}
@@ -158,6 +160,7 @@ void Simulator::set_anchor(Cell* cell) {
 	cell->anchor = big;
 	for (int i = 0; i < cell->inlines.size(); i++) {
 		cell->inlines[i]->anchor = big;
+		cell->inlines[i]->next_node = big->id;
 	}
 
 
@@ -199,6 +202,12 @@ Node* Simulator::find_node_by_id(int id) {
 	return nodes[id];
 }
 
+void Simulator::routing_all() {
+	for (int i = 0; i < NODES; i++) {
+		nodes[i]->next_node = nodes[i]->routing();
+	}
+}
+
 void Simulator::sensing_all()
 {
 	int i;
@@ -234,7 +243,7 @@ void Simulator::transmit_nodes(Node* n) {
 		}
 		Packet p = {
 			n->id,
-			n->routing(),
+			n->next_node,
 			n->id,
 			data_size + PACKET_HEADER,
 			num_data,
@@ -264,6 +273,7 @@ void Simulator::transmitting() {
 		p = network.front();
 		network.pop_front();
 		receive_packet(find_node_by_id(p.to), p);
+		//printf("%d\n", network.size());
 	}
 
 }
@@ -279,7 +289,7 @@ void Simulator::receive_packet(Node* n, Packet p) {
 	}
 	
 	p.from = n->id;
-	p.to = n->routing();
+	p.to = n->next_node;
 	
 	network.push_back(p);
 	n->consume_energy(Node::calc_send_energy(p.size) * n->neighbor.size());
@@ -329,7 +339,7 @@ void Simulator::start_simulator() {
 	for (int day = 0; day < MONTH; day++) {
 		for (round = 1; round <= DAY; round++) {
 			anchor_move();
-			for (times = 0; times < 6; times++) {
+			for (times = 0; times < HOUR/TR_CYCLE; times++) {
 				sensing_all();
 				transmit();
 				transmitting();
@@ -346,16 +356,20 @@ void Simulator::start_simulator() {
 	for (int i = 0; i < NODES; i++) {
 		if (nodes[i]->status == ACTIVE)
 			array1[nodes[i]->y][nodes[i]->x] = 1;
+		else if(nodes[i]->status == BLACKOUT)
+			array1[nodes[i]->y][nodes[i]->x] = 2;
 	}
 
 	for (int i = 0; i < FIELD_SIZE; i++) {
 		for (int j = 0; j < FIELD_SIZE; j++) {
 
-			if (array1[i][j]) {
+			if (array1[i][j] == 1) {
 				//fprintf(fp, "%d,%d,%d\n", count, i, j);
 				std::cout << "бс";
 				//count++;
 			}
+			else if (array1[i][j] == 2)
+				std::cout << "X ";
 			else {
 				std::cout << "  ";
 			}

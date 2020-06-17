@@ -24,6 +24,7 @@ Node::Node() {
 	num_data = 0;
 
 	anchor = NULL;
+	next_node = 0;
 }
 
 Node::Node(FILE* fp) {
@@ -101,7 +102,7 @@ bool Node::consume_energy(double consume) {
 	if (energy < 0) {
 		energy = 0;
 		status = BLACKOUT;
-		printf("I dead");
+		//printf("I dead");
 		return false;
 	}
 
@@ -113,20 +114,25 @@ int Node::routing() {
 		return anchor->id;
 
 	Node* big = NULL;
-	std::vector<Node*> temp;
+	std::queue<Node*> temp;
 	for (int i = 0; i < neighbor.size(); i++) {
 		if (line_is_right) {
-			if (neighbor[i]->x < x)
-				continue;
-			temp.push_back(neighbor[i]);
+			if (neighbor[i]->x > x && neighbor[i]->x < FIELD_SIZE/2)
+				temp.push(neighbor[i]);
 		}
 		else {
-			if (neighbor[i]->x > x)
-				continue;
-			temp.push_back(neighbor[i]);
+			if (neighbor[i]->x < x && neighbor[i]->x > FIELD_SIZE / 2)
+				temp.push(neighbor[i]);
 		}
 	}
-	big = temp[rand() % temp.size()];
+	Node* node1 = temp.front();
+	temp.pop();
+	big = node1;
+	for (int i = 0; i < temp.size(); i++) {
+		node1 = temp.front();
+		temp.pop();
+		big = abs(y - big->y) < abs(y - node1->y) ? big : node1;
+	}
 	return big->id;
 }
 

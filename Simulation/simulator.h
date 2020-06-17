@@ -37,6 +37,8 @@ public:
 	void find_inlines(Line line);
 	void set_anchor(Cell* cell);
 
+	void routing_all();
+
 	Node* find_node_by_id(int id);
 
 	void sensing_all();

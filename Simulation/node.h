@@ -36,6 +36,7 @@ public:
 
 	std::vector<Node*> neighbor;				// 이웃 노드 목록
 	//Node* next_node;							// 다음 노드
+	int next_node;
 
 	int line_is_right;								// 라인이 오른쪽인지 왼쪽인지	// 오른쪽이면 1 왼쪽이면 0
 
