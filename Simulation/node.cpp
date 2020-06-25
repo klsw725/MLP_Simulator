@@ -76,6 +76,7 @@ int Node::consume_idle_energy(Node *n, int time) {
 		if (n->energy < 0) {
 			n->energy = 0;
 			n->status = BLACKOUT;
+			n->data_size = 0;
 			return false;
 		}
 	}
@@ -86,6 +87,8 @@ int Node::consume_idle_energy(Node *n, int time) {
 			n->energy = n->max_energy;
 			return false;
 		}
+		if (n->status == BLACKOUT)
+			n->status = ACTIVE;
 	}
 	return true;
 }
@@ -107,6 +110,7 @@ bool Node::consume_energy(double consume) {
 
 	if (energy < 0) {
 		energy = 0;
+		data_size = 0;
 		status = BLACKOUT;
 		//printf("I dead");
 		return false;
@@ -121,14 +125,33 @@ int Node::routing() {
 
 	Node* big = NULL;
 	std::queue<Node*> temp;
-	for (int i = 0; i < neighbor.size(); i++) {
-		if (line_is_right) {
-			if (neighbor[i]->x > x && neighbor[i]->x < FIELD_SIZE/2)
-				temp.push(neighbor[i]);
+	if (x > FIELD_SIZE / 2) {
+		for (int i = 0; i < neighbor.size(); i++) {
+			if (line_is_right) {
+				if (neighbor[i]->x > x && neighbor[i]->x >= FIELD_SIZE / 2)
+					temp.push(neighbor[i]);
+			}
+			else {
+				if (neighbor[i]->x < x && neighbor[i]->x >= FIELD_SIZE / 2)
+					temp.push(neighbor[i]);
+			}
 		}
-		else {
-			if (neighbor[i]->x < x && neighbor[i]->x > FIELD_SIZE / 2)
-				temp.push(neighbor[i]);
+	}
+	else {
+		for (int i = 0; i < neighbor.size(); i++) {
+			if (line_is_right) {
+				if (neighbor[i]->x > x && neighbor[i]->x <= FIELD_SIZE /2)
+					temp.push(neighbor[i]);
+			}
+			else {
+				if (neighbor[i]->x < x && neighbor[i]->x <= FIELD_SIZE / 2)
+					temp.push(neighbor[i]);
+			}
+		}
+	}
+	if (temp.empty()) {
+		for (int i = 0; i < neighbor.size(); i++) {
+			temp.push(neighbor[i]);
 		}
 	}
 	Node* node1 = temp.front();
@@ -149,4 +172,11 @@ void Node::sensing() {
 
 	data_size += SENSING_DATA * (int)TR_CYCLE/SENSING;
 	num_data += (int)TR_CYCLE / SENSING;
+}
+
+void Node::calc_receive_around_energy(int size) {
+	for (int i = 0; i < neighbor.size(); i++) {
+		if (neighbor[i]->status == ACTIVE)
+			neighbor[i]->consume_energy(Node::calc_recv_energy(size));
+	}
 }

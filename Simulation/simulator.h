@@ -20,6 +20,7 @@ typedef struct _Cell {
 class Simulator {
 public:
 	Simulator();
+	Simulator(Simulator* simu);
 	~Simulator();
 
 	int field[FIELD_SIZE][FIELD_SIZE];
@@ -30,6 +31,7 @@ public:
 	std::vector<Node*> nodes;					// 전체 노드 관리 벡터
 
 	Drone *drone;
+	double prevSinkdata;
 
 	void create_field();
 	void init_nodes();
@@ -53,7 +55,17 @@ public:
 
 	void collect_data();
 	void get_data_from_anchor(Node *n);
-	void start_simulator();
+
+	void line_shift();
+	void line_release();
+	void reverse_direct_in_cell();
+
+	void start_simulator(FILE *fp);
+	void start_simulator2(FILE *fp);
+
+	void print_field();
+	void write_data(FILE* fp, int round);
+	void write_data_s(FILE* fp);
 
 	std::deque<Packet> network;
 

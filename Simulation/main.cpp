@@ -8,27 +8,16 @@
 
 int count = 0;
 int main(void) {
+	srand(time(NULL));
 	Simulator *simu = new Simulator();
-
-	FILE* fp;
-	fp = fopen("test.csv","w");
-
-	for (int i = 0; i < FIELD_SIZE; i++) {
-		for (int j = 0; j < FIELD_SIZE; j++) {
-			
-			if (simu->field[i][j]) {
-				fprintf(fp, "%d,%d,%d\n", count, i, j);
-				std::cout << "бс";
-				count++;
-			}
-			else {
-				std::cout << "  ";
-			}
-		}
-		std::cout << std::endl;
-	}
-
-	simu->start_simulator();
+	
+	FILE* fp1, *fp2;
+	fp1 = fopen("OLP800_10_5.csv", "w");
+	fp2 = fopen("MLP800_10_5.csv", "w");
+	simu->start_simulator(fp1);
+	std::cout << count << std::endl;
+	Simulator* simu2 = new Simulator(simu);
+	simu2->start_simulator2(fp2);
 	std::cout << count << std::endl;
 
 }

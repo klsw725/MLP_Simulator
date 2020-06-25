@@ -11,9 +11,16 @@
 #include "simulator.h"
 
 Simulator::Simulator() {
+	prevSinkdata = 0;
+
 	lines.push_back(new Line());
 	lines[0]->start = (FIELD_SIZE / W) / 2 * W;
 	lines[0]->end = lines[0]->start + W-1;
+
+	lines.push_back(new Line());
+	lines.push_back(new Line());
+	lines[2]->start = lines[1]->start = -lines[0]->start;
+	lines[2]->end = lines[1]->end = lines[0]->end;
 
 	create_field();
 	init_nodes();
@@ -34,9 +41,25 @@ Simulator::Simulator() {
 	fclose(fp);
 }
 
+Simulator::Simulator(Simulator* simu) {
+	lines = simu->lines;
+	for (int i = 0; i < FIELD_SIZE; i++) {
+		for (int j = 0; j < FIELD_SIZE; j++) {
+			field[i][j] = simu->field[i][j];
+		}
+	}
+	init_nodes();
+
+	find_inlines(*lines[0]);
+
+	routing_all();
+	drone = new Drone;
+}
+
 Simulator::~Simulator() {
 
 }
+
 
 void Simulator::create_field() {
 	//srand(time(NULL));
@@ -116,18 +139,18 @@ void Simulator::init_nodes() {
 				nodes[index]->id = index;
 				nodes[index]->set_locate(x, y);
 				if (x > FIELD_SIZE/2)
-					nodes[index]->line_is_right = 0;
+					nodes[index]->line_is_right = false;
 				else
-					nodes[index]->line_is_right = 1;
+					nodes[index]->line_is_right = true;
 				index++;
 			}
 		}
 	}
 
-	for (int i = 0; i < nodes.size(); i++) {
-		for (int j = i + 1; j < nodes.size(); j++) {
+	for (int i = 0; i < NODES; i++) {
+		for (int j = i + 1; j < NODES; j++) {
 			double distance = get_distance(nodes[i]->x, nodes[i]->y, nodes[j]->x, nodes[j]->y);
-			if (distance < Node::tr) {
+			if (distance <= Node::tr) {
 				nodes[i]->neighbor.push_back(nodes[j]);
 				nodes[j]->neighbor.push_back(nodes[i]);
 			}
@@ -258,6 +281,7 @@ void Simulator::transmit_nodes(Node* n) {
 			num_data,
 		};
 		n->consume_energy(Node::calc_send_energy(p.size) * n->neighbor.size());
+		n->calc_receive_around_energy(p.size);
 		if (n->status == BLACKOUT) {
 			return;
 		}
@@ -290,7 +314,10 @@ void Simulator::transmitting() {
 void Simulator::receive_packet(Node* n, Packet p) {
 	double energy = 0;
 	p.hop++;
-	n->consume_energy(Node::calc_recv_energy(p.size));
+
+	if (n->status != ACTIVE)
+		return;
+
 	if (n->mode == ANCHOR) {
 		n->num_data += p.num_data;
 		n->data_size += p.num_data * PACKET_PAYLOAD;
@@ -302,6 +329,7 @@ void Simulator::receive_packet(Node* n, Packet p) {
 	
 	network.push_back(p);
 	n->consume_energy(Node::calc_send_energy(p.size) * n->neighbor.size());
+	n->calc_receive_around_energy(p.size);
 	return;
 }
 
@@ -321,7 +349,8 @@ void Simulator::anchor_move() {
 
 void Simulator::collect_data() {
 	for (int i = 0; i < cells.size(); i++) {
-		get_data_from_anchor(cells[i]->anchor);
+		if(cells[i]->anchor->status == ACTIVE)
+			get_data_from_anchor(cells[i]->anchor);
 	}
 }
 
@@ -342,32 +371,125 @@ void Simulator::get_data_from_anchor(Node *n) {
 
 }
 
-void Simulator::start_simulator() {
+
+void Simulator::start_simulator(FILE *fp) {
 	int round;
 	int times;
 	int day;
+
 	for (day = 0; day < MONTH; day++) {
 		for (round = 0; round < DAY; round++) {
-			anchor_move();
 			for (times = 0; times < HOUR/TR_CYCLE; times++) {
 				sensing_all();
 				transmit();
 				transmitting();
-				calc_idle_energy((day*DAY)+(round*HOUR/TR_CYCLE)+times);
+				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
+				if (times == HOUR / TR_CYCLE / 2)
+					anchor_move();
+				write_data(fp, (day * DAY * (HOUR/TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times));
 			}
 			collect_data();
+			printf("-");
+			//print_field();
+			/*write_data(fp, day * DAY + round);*/
 		}
-		printf("-");
+		
+	}
+	write_data_s(fp);
+
+}
+
+void Simulator::line_shift() {
+	for (int i = 0; i < cells.size(); i++) {
+		for (int j = 0; j < cells[i]->inlines.size(); j++) {
+			cells[i]->anchor = NULL;
+			cells[i]->inlines[j]->mode = NORMAL;
+			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
+			cells[i]->inlines[j]->anchor = NULL;
+		}
+		delete cells[i];
+	}
+	cells.erase(cells.begin(), cells.end());
+
+	lines[1]->start -= W;
+	lines[1]->end -= W;
+
+	lines[2]->start += W;
+	lines[2]->end += W;
+
+	if (lines[1]->start < 0 || lines[2]->end > FIELD_SIZE) {
+		lines[1]->start = lines[2]->start = lines[0]->start;
+		lines[1]->end = lines[2]->end = lines[0]->end;
+
+		line_release();
+		find_inlines(*lines[0]);
+	}
+	else {
+		for (int i = 1; i < lines.size(); i++) {
+			find_inlines(*lines[i]);
+		}
 	}
 
-	printf("\n");
+	routing_all();
+}
 
+void Simulator::line_release() {
+	for (int i = 0; i < NODES; i++) {
+		nodes[i]->line_is_right = !nodes[i]->line_is_right;
+	}
+
+}
+
+
+void Simulator::reverse_direct_in_cell() {
+	for (int i = 0; i < cells.size(); i++) {
+		for (int j = 0; j < cells[i]->inlines.size(); j++) {
+			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
+		}
+	}
+}
+
+void Simulator::start_simulator2(FILE *fp) {
+	int round;
+	int times;
+	int day;
+
+	line_release();
+	reverse_direct_in_cell();
+
+	for (day = 0; day < MONTH; day++) {
+		for (round = 0; round < DAY; round++) {
+			line_shift();
+			for (times = 0; times < HOUR / TR_CYCLE; times++) {
+				sensing_all();
+				transmit();
+				transmitting();
+				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
+				write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
+				anchor_move();
+			}
+			collect_data();
+			printf("-");
+			//print_field();
+			/*write_data(fp, day * DAY + round);*/
+		}
+	}
+	write_data_s(fp);
+
+}
+
+void Simulator::print_field() {
 	int array1[FIELD_SIZE][FIELD_SIZE] = { 0, };
 	for (int i = 0; i < NODES; i++) {
 		if (nodes[i]->status == ACTIVE)
 			array1[nodes[i]->y][nodes[i]->x] = 1;
-		else if(nodes[i]->status == BLACKOUT)
+		if (nodes[i]->mode == INLINE)
 			array1[nodes[i]->y][nodes[i]->x] = 2;
+		else if (nodes[i]->mode == ANCHOR)
+			array1[nodes[i]->y][nodes[i]->x] = 3;
+		if (nodes[i]->status == BLACKOUT)
+			array1[nodes[i]->y][nodes[i]->x] = 4;
+
 	}
 
 	for (int i = 0; i < FIELD_SIZE; i++) {
@@ -379,12 +501,37 @@ void Simulator::start_simulator() {
 				//count++;
 			}
 			else if (array1[i][j] == 2)
+				std::cout << "¡Ú";
+			else if (array1[i][j] == 3)
+				std::cout << "¡Ù";
+			else  if (array1[i][j] == 4)
 				std::cout << "X ";
 			else {
 				std::cout << "  ";
 			}
 		}
-		std::cout << std::endl;
+		std::cout << std::endl << std::endl;
 	}
 }
 
+void Simulator::write_data(FILE *fp, int round) {
+	int num_blackout = 0;
+	double num_sinkdata = 0;
+	num_sinkdata = drone->data - prevSinkdata;
+
+	for (int i = 0; i < NODES; i++) {
+		if (nodes[i]->status == BLACKOUT)
+			num_blackout++;
+	}
+
+	fprintf(fp, "%d, %d, %lf\n", round, num_blackout, num_sinkdata);
+	prevSinkdata = drone->data;
+}
+
+void Simulator::write_data_s(FILE* fp) {
+	double num_sinkdata = 0;
+	num_sinkdata = drone->data - prevSinkdata;
+
+	fprintf(fp, ", ,%lf\n", num_sinkdata);
+	prevSinkdata = drone->data;
+}
