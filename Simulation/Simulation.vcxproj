@@ -32,6 +32,9 @@
     <ClInclude Include="packet.h" />
     <ClInclude Include="simulator.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="solar_10min.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{E9AFDE71-BDE4-4FF1-B96C-FB467623756A}</ProjectGuid>

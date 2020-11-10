@@ -98,7 +98,7 @@ double Node::calc_harvest_energy(Node* n, int time) {
 
 	int i = time % solar.size();
 
-	energy += solar[i];
+	energy += (solar[i] * PANEL);
 
 	return energy;
 }
