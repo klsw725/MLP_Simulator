@@ -125,7 +125,7 @@ int Node::routing() {
 
 	Node* big = NULL;
 	std::queue<Node*> temp;
-	if (x > FIELD_SIZE / 2) {
+	/*if (x > FIELD_SIZE / 2) {
 		for (int i = 0; i < neighbor.size(); i++) {
 			if (line_is_right) {
 				if (neighbor[i]->x > x && neighbor[i]->x >= FIELD_SIZE / 2)
@@ -148,6 +148,21 @@ int Node::routing() {
 					temp.push(neighbor[i]);
 			}
 		}
+	}*/
+	if (line_is_right) {
+		for (int i = 0; i < neighbor.size(); i++) {
+			if (neighbor[i]->x > x) {
+				temp.push(neighbor[i]);
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < neighbor.size(); i++) {
+			if (neighbor[i]->x < x) {
+				temp.push(neighbor[i]);
+			}
+		}
+
 	}
 	if (temp.empty()) {
 		for (int i = 0; i < neighbor.size(); i++) {
@@ -160,7 +175,7 @@ int Node::routing() {
 	for (int i = 0; i < temp.size(); i++) {
 		node1 = temp.front();
 		temp.pop();
-		big = abs(y - big->y) < abs(y - node1->y) ? big : node1;
+		big = abs(y - big->y) <= abs(y - node1->y) ? big : node1;
 	}
 	return big->id;
 }
