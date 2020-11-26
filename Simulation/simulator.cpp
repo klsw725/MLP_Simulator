@@ -384,11 +384,14 @@ void Simulator::start_simulator(FILE *fp) {
 				transmit();
 				transmitting();
 				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				if (times == HOUR / TR_CYCLE / 2)
-					anchor_move();
 				write_data(fp, (day * DAY * (HOUR/TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times));
+				//anchor_move();
 			}
 			collect_data();
+			for (int i = 0; i < NODES; i++) {
+				fprintf(fp, "%d \n", nodes[i]->data_size);
+			}
+			exit(0);
 			printf("-");
 			//print_field();
 			/*write_data(fp, day * DAY + round);*/
@@ -465,14 +468,19 @@ void Simulator::start_simulator2(FILE *fp) {
 				transmit();
 				transmitting();
 				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				anchor_move();
+				//write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
+				//anchor_move();
 			}
+			for (int i = 0; i < NODES; i++) {
+				fprintf(fp, "%d \n", nodes[i]->data_size);
+			}
+			exit(0);
 			collect_data();
+			
 			printf("-");
-			//print_field();
 			/*write_data(fp, day * DAY + round);*/
 		}
+
 	}
 	write_data_s(fp);
 
@@ -491,7 +499,7 @@ void Simulator::print_field() {
 			array1[nodes[i]->y][nodes[i]->x] = 4;
 
 	}
-
+	printf("\n");
 	for (int i = 0; i < FIELD_SIZE; i++) {
 		for (int j = 0; j < FIELD_SIZE; j++) {
 
@@ -532,6 +540,6 @@ void Simulator::write_data_s(FILE* fp) {
 	double num_sinkdata = 0;
 	num_sinkdata = drone->data - prevSinkdata;
 
-	fprintf(fp, ", ,%lf\n", num_sinkdata);
+	fprintf(fp, "0, 0, %lf\n", num_sinkdata);
 	prevSinkdata = drone->data;
 }

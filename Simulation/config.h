@@ -7,7 +7,7 @@
 #define DAY 24
 #define MONTH 30
 
-#define FIELD_SIZE 75	// 공간의 사이즈
+#define FIELD_SIZE 70	// 공간의 사이즈
 #define W 10			// W, 라인의 폭
 #define G 10			// 라인을 나누는 size
 
@@ -30,7 +30,7 @@
 #define RX  0.00000018912					// rx energy J/byte
 #define DATA_RATE  31250.0			// bytes/S -> 초당 보내는 것은 1/data_rate
 
-#define BATTERY 75		// mAh
+#define BATTERY 50		// mAh
 #define MAX_ENERGY BATTERY * 3.6 * 3;	// J
 
 #define PANEL 1		// 1.2(4)
