@@ -1,35 +1,24 @@
 ﻿#include "node.h"
 
-double Node::tr = TR;
-double Node::max_energy = MAX_ENERGY;			// J단위 (200mAh)
-double Node::tx = TX;					// tx energy J/byte
-double Node::rx = RX;					// rx energy J/byte
-double Node::data_rate = DATA_RATE;			// bytes/S -> 초당 보내는 것은 1/data_rate
-double Node::active_energy = ACTIVE_ENERGY;		// J/s
-double Node::sleep_energy = SLEEP_ENERGY;		// J/s
-double Node::max_data_size = MAX_DATA;		// 128 바이트
 std::vector<double> Node::solar;
 
 
 Node::Node() {
 	id = 0;
-	x, y = 0;
-	status = ACTIVE;
-	mode = NORMAL;
+	x=0 , y = 0;
+	status = Status::ACTIVE;
+	mode = Mode::NORMAL;
 
-	energy = max_energy;
+	energy = MAX_ENERGY;
 	line_is_right = 0;
 	
 	data_size = 0;
 	num_data = 0;
 
-	anchor = NULL;
+	anchor = 0;
 	next_node = 0;
 }
 
-Node::Node(FILE* fp) {
-
-}
 
 Node::~Node() {
 
@@ -37,63 +26,27 @@ Node::~Node() {
 
 
 double Node::calc_send_energy(double size) {
-	return size * tx;
+	return size * TX;
 }
 
 double Node::calc_recv_energy(double size) {
-	return size * rx;
+	return size * RX;
 }
 
-double Node::calc_sleep_energy(Node *n, double time) {
-	double energy;
+double Node::calc_sleep_energy(double time) {
+	/*double energy;
 
-	//if (n->status == SLEEP) {
-		energy = SLEEP_ENERGY * time;
-		return energy;
-	//}
-	
-	//energy = SLEEP_ENERGY * time + 
-	
+	energy = SLEEP_ENERGY * time;
+	return energy;*/
+	return SLEEP_ENERGY * time;
 }
 
-double Node::calc_active_energy(Node* n, double time) {
+double Node::calc_active_energy(double time) {
 	double energy = ACTIVE_ENERGY * time;
 	return energy;
 }
 
-int Node::consume_idle_energy(Node *n, int time) {
-	double senergy;
-	double aenergy;
-	double henergy;
-
-	senergy = Node::calc_sleep_energy(n, (1 - DUTY_CYCLE) * MIN * TR_CYCLE);
-	aenergy = Node::calc_active_energy(n, DUTY_CYCLE * MIN * TR_CYCLE);
-	henergy = Node::calc_harvest_energy(n, time);
-
-	if (senergy + aenergy > henergy) {
-		n->energy = n->energy - senergy - aenergy + henergy;
-
-		if (n->energy < 0) {
-			n->energy = 0;
-			n->status = BLACKOUT;
-			n->data_size = 0;
-			return false;
-		}
-	}
-	else {
-		n->energy = n->energy - senergy - aenergy + henergy;
-
-		if (n->energy > n->max_energy) {
-			n->energy = n->max_energy;
-			return false;
-		}
-		if (n->status == BLACKOUT)
-			n->status = ACTIVE;
-	}
-	return true;
-}
-
-double Node::calc_harvest_energy(Node* n, int time) {
+double Node::calc_harvest_energy(int time) {
 	double energy = 0;
 
 	int i = time % solar.size();
@@ -103,52 +56,49 @@ double Node::calc_harvest_energy(Node* n, int time) {
 	return energy;
 }
 
-bool Node::consume_energy(double consume) {
-	if (consume <= 0)
-		exit(1);
-	energy -= consume;
+bool Node::consume_idle_energy(int time) {
+	double senergy = 0;
+	double aenergy = 0;
+	double henergy = 0;
 
-	if (energy < 0) {
-		energy = 0;
-		data_size = 0;
-		status = BLACKOUT;
-		//printf("I dead");
-		return false;
+	senergy = calc_sleep_energy((1 - DUTY_CYCLE) * MIN * TR_CYCLE);
+	aenergy = calc_active_energy(DUTY_CYCLE * MIN * TR_CYCLE);
+	henergy = calc_harvest_energy(time);
+
+	if (senergy + aenergy > henergy) {
+		energy = energy - senergy - aenergy + henergy;
+
+		if (energy < BLACKOUT_ENERGY) {
+			if (energy < 0)
+				energy = 0;
+			status = Status::BLACKOUT;
+			// data_size = 0;
+			return false;
+		}
 	}
+	else {
+		energy = energy - senergy - aenergy + henergy;
 
+		if (energy < BLACKOUT_ENERGY) {
+			status = Status::BLACKOUT;
+			return false;
+		}
+
+		if (energy > MAX_ENERGY)
+			energy = MAX_ENERGY;
+		status = Status::ACTIVE;
+		/*energy = MAX_ENERGY;*/
+	}
 	return true;
 }
 
 int Node::routing() {
-	if (mode != NORMAL)
+	if (mode != Mode::NORMAL)
 		return anchor->id;
 
 	Node* big = NULL;
 	std::queue<Node*> temp;
-	/*if (x > FIELD_SIZE / 2) {
-		for (int i = 0; i < neighbor.size(); i++) {
-			if (line_is_right) {
-				if (neighbor[i]->x > x && neighbor[i]->x >= FIELD_SIZE / 2)
-					temp.push(neighbor[i]);
-			}
-			else {
-				if (neighbor[i]->x < x && neighbor[i]->x >= FIELD_SIZE / 2)
-					temp.push(neighbor[i]);
-			}
-		}
-	}
-	else {
-		for (int i = 0; i < neighbor.size(); i++) {
-			if (line_is_right) {
-				if (neighbor[i]->x > x && neighbor[i]->x <= FIELD_SIZE /2)
-					temp.push(neighbor[i]);
-			}
-			else {
-				if (neighbor[i]->x < x && neighbor[i]->x <= FIELD_SIZE / 2)
-					temp.push(neighbor[i]);
-			}
-		}
-	}*/
+		
 	if (line_is_right) {
 		for (int i = 0; i < neighbor.size(); i++) {
 			if (neighbor[i]->x > x) {
@@ -181,7 +131,7 @@ int Node::routing() {
 }
 
 void Node::sensing() {
-	if (status != ACTIVE) {
+	if (status != Status::ACTIVE) {
 		return;
 	}
 
@@ -189,9 +139,24 @@ void Node::sensing() {
 	num_data += (int)TR_CYCLE / SENSING;
 }
 
-void Node::calc_receive_around_energy(int size) {
+bool Node::consume_energy(double consume) {
+	if (consume <= 0)
+		exit(1);
+	energy -= consume;
+
+	if (energy < BLACKOUT_ENERGY) {
+		if(energy < 0)
+			energy = 0;
+		status = Status::BLACKOUT;
+		//printf("I dead");
+		return false;
+	}
+	return true;
+}
+
+void Node::consume_receive_around_energy(double size) {
 	for (int i = 0; i < neighbor.size(); i++) {
-		if (neighbor[i]->status == ACTIVE)
-			neighbor[i]->consume_energy(Node::calc_recv_energy(size));
+		if (neighbor[i]->status == Status::ACTIVE)
+			neighbor[i]->consume_energy(calc_recv_energy(size));
 	}
 }

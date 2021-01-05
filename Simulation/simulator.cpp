@@ -73,7 +73,7 @@ void Simulator::create_field() {
 	int density = pow(FIELD_SIZE, 2)/NODES + 1;		// 노드가 들어가야할 단위 면적
 	density = sqrt(density)+1;						// 면적의 길이
 
-	while ((double)density > Node::tr) {		// 전송 거리보다 노드 단위당 면적의 길이가 크다면 하나씩 줄여나감
+	while ((double)density > TR) {		// 전송 거리보다 노드 단위당 면적의 길이가 크다면 하나씩 줄여나감
 		density -= 1;
 	}
 
@@ -150,7 +150,7 @@ void Simulator::init_nodes() {
 	for (int i = 0; i < NODES; i++) {
 		for (int j = i + 1; j < NODES; j++) {
 			double distance = get_distance(nodes[i]->x, nodes[i]->y, nodes[j]->x, nodes[j]->y);
-			if (distance <= Node::tr) {
+			if (distance <= TR) {
 				nodes[i]->neighbor.push_back(nodes[j]);
 				nodes[j]->neighbor.push_back(nodes[i]);
 			}
@@ -186,7 +186,7 @@ void Simulator::set_anchor(Cell* cell) {
 			big = big->energy > node1->energy ? big : node1;
 		}
 	}
-	big->mode = ANCHOR;
+	big->mode = Mode::ANCHOR;
 	big->anchor = big;
 
 	cell->anchor = big;
@@ -214,7 +214,7 @@ void Simulator::find_inlines(Line line) {
 		Cell* temp = new Cell;
 		for (int i = 0; i < NODES; i++) {
 			if (nodes[i]->x >= line.start && nodes[i]->x <= line.end && nodes[i]->y >= y * G && nodes[i]->y < (y+1)*G) {
-				nodes[i]->mode = INLINE;
+				nodes[i]->mode = Mode::INLINE;
 				temp->inlines.push_back(nodes[i]);
 			}
 		}
@@ -226,7 +226,7 @@ void Simulator::find_inlines(Line line) {
 void init_cell(Cell* cell) {
 	cell->anchor = NULL;
 	for (int i = 0; i < cell->inlines.size(); i++) {
-		cell->inlines[0]->mode = INLINE;
+		cell->inlines[i]->mode = Mode::INLINE;
 	}
 }
 
@@ -280,9 +280,12 @@ void Simulator::transmit_nodes(Node* n) {
 			data_size + PACKET_HEADER,
 			num_data,
 		};
-		n->consume_energy(Node::calc_send_energy(p.size) * n->neighbor.size());
-		n->calc_receive_around_energy(p.size);
-		if (n->status == BLACKOUT) {
+		n->consume_energy(n->calc_send_energy(p.size) * n->neighbor.size());
+		if (n->status == Status::BLACKOUT) {
+			return;
+		}
+		n->consume_receive_around_energy(p.size);
+		if (n->status == Status::BLACKOUT) {
 			return;
 		}
 		network.push_back(p);
@@ -292,7 +295,7 @@ void Simulator::transmit_nodes(Node* n) {
 void Simulator::transmit() {
 	int i = 0;
 	for (i = 0; i < NODES; i++) {
-		if (nodes[i]->mode == ANCHOR || nodes[i]->status != ACTIVE)
+		if (nodes[i]->mode == Mode::ANCHOR || nodes[i]->status != Status::ACTIVE)
 			continue;
 		transmit_nodes(nodes[i]);
 	}
@@ -315,10 +318,10 @@ void Simulator::receive_packet(Node* n, Packet p) {
 	double energy = 0;
 	p.hop++;
 
-	if (n->status != ACTIVE)
+	if (n->status != Status::ACTIVE)
 		return;
 
-	if (n->mode == ANCHOR) {
+	if (n->mode == Mode::ANCHOR) {
 		n->num_data += p.num_data;
 		n->data_size += p.num_data * PACKET_PAYLOAD;
 		return;
@@ -328,15 +331,15 @@ void Simulator::receive_packet(Node* n, Packet p) {
 	p.to = n->next_node;
 	
 	network.push_back(p);
-	n->consume_energy(Node::calc_send_energy(p.size) * n->neighbor.size());
-	n->calc_receive_around_energy(p.size);
+	n->consume_energy(n->calc_send_energy(p.size) * n->neighbor.size());
+	n->consume_receive_around_energy(p.size);
 	return;
 }
 
 void Simulator::calc_idle_energy(int time) {
 	int i = 0;
 	for (i = 0; i < NODES; i++) {
-		Node::consume_idle_energy(nodes[i], time);
+		nodes[i]->consume_idle_energy( time);
 	}
 }
 
@@ -349,7 +352,7 @@ void Simulator::anchor_move() {
 
 void Simulator::collect_data() {
 	for (int i = 0; i < cells.size(); i++) {
-		if(cells[i]->anchor->status == ACTIVE)
+		if(cells[i]->anchor->status == Status::ACTIVE)
 			get_data_from_anchor(cells[i]->anchor);
 	}
 }
@@ -357,18 +360,20 @@ void Simulator::collect_data() {
 void Simulator::get_data_from_anchor(Node *n) {
 
 	// 한 패킷을 보낼 때의 에너지
-	double packet_e = Node::calc_send_energy(PACKET_HEADER + PACKET_PAYLOAD);
+	double packet_e = n->calc_send_energy(PACKET_HEADER + PACKET_PAYLOAD);
 
 	while (n->data_size > PACKET_PAYLOAD) {
 		drone->data += PACKET_PAYLOAD;
 		n->data_size -= PACKET_PAYLOAD;
-		n->consume_energy(packet_e * n->neighbor.size());
+		n->consume_receive_around_energy(packet_e);
+		if (!(n->consume_energy(packet_e * n->neighbor.size())))
+			return;
 	}
 	drone->data += n->data_size;
-	n->consume_energy(Node::calc_send_energy(n->data_size + PACKET_HEADER) * n->neighbor.size());
+	n->consume_energy(n->calc_send_energy(n->data_size + PACKET_HEADER) * n->neighbor.size());
+	n->consume_receive_around_energy(n->data_size + PACKET_HEADER);
 	n->data_size = 0;
 	n->num_data = 0;
-
 }
 
 
@@ -380,18 +385,19 @@ void Simulator::start_simulator(FILE *fp) {
 	for (day = 0; day < MONTH; day++) {
 		for (round = 0; round < DAY; round++) {
 			for (times = 0; times < HOUR/TR_CYCLE; times++) {
+				if(times % 2 == 0)
+					anchor_move();
 				sensing_all();
 				transmit();
 				transmitting();
 				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
 				write_data(fp, (day * DAY * (HOUR/TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times));
-				//anchor_move();
 			}
 			collect_data();
-			for (int i = 0; i < NODES; i++) {
-				fprintf(fp, "%d \n", nodes[i]->data_size);
-			}
-			exit(0);
+			//for (int i = 0; i < NODES; i++) {
+			//	fprintf(fp, "%d \n", nodes[i]->data_size);
+			//}
+			//exit(0);
 			printf("-");
 			//print_field();
 			/*write_data(fp, day * DAY + round);*/
@@ -406,7 +412,7 @@ void Simulator::line_shift() {
 	for (int i = 0; i < cells.size(); i++) {
 		for (int j = 0; j < cells[i]->inlines.size(); j++) {
 			cells[i]->anchor = NULL;
-			cells[i]->inlines[j]->mode = NORMAL;
+			cells[i]->inlines[j]->mode = Mode::NORMAL;
 			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
 			cells[i]->inlines[j]->anchor = NULL;
 		}
@@ -464,17 +470,18 @@ void Simulator::start_simulator2(FILE *fp) {
 		for (round = 0; round < DAY; round++) {
 			line_shift();
 			for (times = 0; times < HOUR / TR_CYCLE; times++) {
+				if (times % 2 == 0)
+					anchor_move();
 				sensing_all();
 				transmit();
 				transmitting();
 				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				//write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				//anchor_move();
+				write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
 			}
-			for (int i = 0; i < NODES; i++) {
-				fprintf(fp, "%d \n", nodes[i]->data_size);
-			}
-			exit(0);
+			//for (int i = 0; i < NODES; i++) {
+			//	fprintf(fp, "%d \n", nodes[i]->data_size);
+			//}
+			//exit(0);
 			collect_data();
 			
 			printf("-");
@@ -489,13 +496,13 @@ void Simulator::start_simulator2(FILE *fp) {
 void Simulator::print_field() {
 	int array1[FIELD_SIZE][FIELD_SIZE] = { 0, };
 	for (int i = 0; i < NODES; i++) {
-		if (nodes[i]->status == ACTIVE)
+		if (nodes[i]->status == Status::ACTIVE)
 			array1[nodes[i]->y][nodes[i]->x] = 1;
-		if (nodes[i]->mode == INLINE)
+		if (nodes[i]->mode == Mode::INLINE)
 			array1[nodes[i]->y][nodes[i]->x] = 2;
-		else if (nodes[i]->mode == ANCHOR)
+		else if (nodes[i]->mode == Mode::ANCHOR)
 			array1[nodes[i]->y][nodes[i]->x] = 3;
-		if (nodes[i]->status == BLACKOUT)
+		if (nodes[i]->status == Status::BLACKOUT)
 			array1[nodes[i]->y][nodes[i]->x] = 4;
 
 	}
@@ -528,7 +535,7 @@ void Simulator::write_data(FILE *fp, int round) {
 	num_sinkdata = drone->data - prevSinkdata;
 
 	for (int i = 0; i < NODES; i++) {
-		if (nodes[i]->status == BLACKOUT)
+		if (nodes[i]->status == Status::BLACKOUT)
 			num_blackout++;
 	}
 
