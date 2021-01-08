@@ -8,6 +8,8 @@
 #include "packet.h"
 #include "config.h"
 
+static int static_w = W;
+
 typedef struct _Line {
 	int start=0, end=0;
 }Line;

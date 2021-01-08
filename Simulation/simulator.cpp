@@ -280,6 +280,12 @@ void Simulator::transmit_nodes(Node* n) {
 			data_size + PACKET_HEADER,
 			num_data,
 		};
+		if (find_node_by_id(n->next_node)->status != Status::ACTIVE) {
+			p.to = n->id;
+			n->data_size += p.size - PACKET_HEADER;
+			n->num_data += p.num_data;
+		}
+
 		n->consume_energy(n->calc_send_energy(p.size) * n->neighbor.size());
 		if (n->status == Status::BLACKOUT) {
 			return;
@@ -550,3 +556,4 @@ void Simulator::write_data_s(FILE* fp) {
 	fprintf(fp, "0, 0, %lf\n", num_sinkdata);
 	prevSinkdata = drone->data;
 }
+
