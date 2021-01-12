@@ -17,6 +17,9 @@ int main(void) {
 	fp2 = fopen("MLP1000_10_5.csv", "w");
 	fp3 = fopen("SLP1000_10_5.csv", "w");
 	
+	//simu3->start_simulator3(fp3);
+	//std::cout << count << std::endl;
+
 	simu->start_simulator(fp1);
 	std::cout << count << std::endl;
 	

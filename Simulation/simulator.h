@@ -59,11 +59,13 @@ public:
 	void get_data_from_anchor(Node *n);
 
 	void line_shift();
+	void line_shift2();
 	void line_release();
 	void reverse_direct_in_cell();
 
 	void start_simulator(FILE *fp);
 	void start_simulator2(FILE *fp);
+	void start_simulator3(FILE* fp);
 
 	void print_field();
 	void write_data(FILE* fp, int round);
