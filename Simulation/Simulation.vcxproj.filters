@@ -27,6 +27,18 @@
     <ClCompile Include="drone.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="larcms.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="lbdd.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="scheme.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="line_shift.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="simulator.h">

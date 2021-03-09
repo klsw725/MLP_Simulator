@@ -1,7 +1,79 @@
-﻿  simulator.cpp
-C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(73,14): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(74,25): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(289,47): warning C4244: '+=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(329,46): warning C4244: '+=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(344,46): warning C4244: '+=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  Simulation.vcxproj -> C:\Users\DCUniv\Desktop\MLP_Simulator\x64\Debug\Simulation.exe
+﻿  larcms.cpp
+  lbdd.cpp
+  line_shift.cpp
+  main.cpp
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(8,13): error C2065: 'NULL': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(8,8): error C3861: 'time': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(8,2): error C3861: 'srand': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(9,2): error C2065: 'Simulator': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(9,13): error C2065: 'simu': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(9,33): error C2061: 구문 오류: 식별자 'Simulator'
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(11,2): error C2065: 'FILE': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(11,8): error C2065: 'fp1': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(11,14): error C2065: 'fp2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(11,20): error C2065: 'fp3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(11,26): error C2065: 'fp4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(12,2): error C2065: 'fp1': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(12,8): error C3861: 'fopen': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(13,2): error C2065: 'fp2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(13,8): error C3861: 'fopen': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(14,2): error C2065: 'fp3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(14,8): error C3861: 'fopen': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(15,2): error C2065: 'fp4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(15,8): error C3861: 'fopen': 식별자를 찾을 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(17,2): error C2065: 'simu': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(17,29): error C2065: 'fp1': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(18,7): error C2039: 'cout': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(18,12): error C2065: 'cout': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(18,29): error C2039: 'endl': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(18,33): error C2065: 'endl': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(20,2): error C2065: 'Simulator': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(20,13): error C2065: 'simu2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(20,34): error C2061: 구문 오류: 식별자 'Simulator'
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(21,2): error C2065: 'simu2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(21,25): error C2065: 'fp2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(22,7): error C2039: 'cout': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(22,12): error C2065: 'cout': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(22,29): error C2039: 'endl': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(22,33): error C2065: 'endl': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(23,9): error C2065: 'simu2': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(23,14): error C2541: 'delete': 포인터가 아닌 개체를 삭제할 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(25,2): error C2065: 'Simulator': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(25,13): error C2065: 'simu3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(25,34): error C2061: 구문 오류: 식별자 'Simulator'
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(26,2): error C2065: 'simu3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(26,31): error C2065: 'fp3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(27,7): error C2039: 'cout': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(27,12): error C2065: 'cout': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(27,29): error C2039: 'endl': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(27,33): error C2065: 'endl': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(28,9): error C2065: 'simu3': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(28,14): error C2541: 'delete': 포인터가 아닌 개체를 삭제할 수 없습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(30,2): error C2065: 'Simulator': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(30,13): error C2065: 'simu4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(30,34): error C2061: 구문 오류: 식별자 'Simulator'
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(31,2): error C2065: 'simu4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(31,32): error C2065: 'fp4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(32,7): error C2039: 'cout': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(32,12): error C2065: 'cout': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(32,29): error C2039: 'endl': 'std'의 멤버가 아닙니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\predefined C++ types (compiler internal)(340): message : 'std' 선언을 참조하십시오.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(32,33): error C2065: 'endl': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(33,9): error C2065: 'simu4': 선언되지 않은 식별자입니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\main.cpp(33,14): error C2541: 'delete': 포인터가 아닌 개체를 삭제할 수 없습니다.
+  node.cpp
+  scheme.cpp
+  simulator.cpp
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(66,35): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(67,64): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(102,14): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(103,25): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\DCUniv\Desktop\MLP_Simulator\Simulation\simulator.cpp(270,47): warning C4244: '+=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  코드를 생성하고 있습니다...

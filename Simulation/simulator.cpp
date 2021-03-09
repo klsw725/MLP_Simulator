@@ -19,15 +19,16 @@ Simulator::Simulator() {
 
 	lines.push_back(new Line());
 	lines.push_back(new Line());
-	lines[2]->start = lines[1]->start = -lines[0]->start;
+	lines[2]->start = lines[1]->start = lines[0]->start;
 	lines[2]->end = lines[1]->end = lines[0]->end;
 
 	create_field();
 	init_nodes();
 
 	find_inlines(*lines[0]);
-
-	routing_all();
+	calc_vec_table();
+	/*routing_all();*/
+	routing_all2();
 
 	drone = new Drone;
 
@@ -51,10 +52,38 @@ Simulator::Simulator(Simulator* simu) {
 	init_nodes();
 
 	find_inlines(*lines[0]);
-
+	calc_vec_table();
 	routing_all();
+	//routing_all2();
 	drone = new Drone;
 }
+
+Simulator::Simulator(Simulator* simu, int num)
+{
+	lines.push_back(new Line());	//세로
+	lines.push_back(new Line());	//세로
+
+	lines[0]->start = FIELD_SIZE / 2 * (1 - (double)W / FIELD_SIZE);
+	lines[0]->end = FIELD_SIZE / 2 * (1 + (double)W / FIELD_SIZE) - 1;
+
+	lines[1]->start = lines[0]->start;
+	lines[1]->end = lines[0]->end;
+
+	for (int i = 0; i < FIELD_SIZE; i++) {
+		for (int j = 0; j < FIELD_SIZE; j++) {
+			field[i][j] = simu->field[i][j];
+		}
+	}
+	init_nodes();
+	calc_vec_table();
+
+	make_cross(lines[0]);
+
+	routing_all2();
+
+	drone = new Drone;
+}
+
 
 Simulator::~Simulator() {
 
@@ -120,7 +149,7 @@ void Simulator::create_field() {
 	 
 }
 
-double get_distance(double x1, double y1, double x2, double y2)
+double Simulator::get_distance(double x1, double y1, double x2, double y2)
 {
 	return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
@@ -158,56 +187,6 @@ void Simulator::init_nodes() {
 	}
 }
 
-void Simulator::set_anchor(Cell* cell) {
-	std::queue<Node*>temp;
-	Node* big = NULL;
-	Node* node1 = NULL;
-
-	for (int i = 0; i < cell->inlines.size(); i++) {
-		if (cell->inlines[i]->energy > THRESHOLD) {
-			temp.push(cell->inlines[i]);
-		}
-	}
-
-	if (temp.empty()) {
-		big = cell->inlines[0];
-		for (int i = 1; i < cell->inlines.size(); i++) {
-			node1 = cell->inlines[i];
-			big = big->energy > node1->energy ? big : node1;
-		}
-	}
-	else {
-		big = temp.front();
-		temp.pop();
-
-		for (int i = 0; i < temp.size(); i++) {
-			node1 = temp.front();
-			temp.pop();
-			big = big->energy > node1->energy ? big : node1;
-		}
-	}
-	big->mode = Mode::ANCHOR;
-	big->anchor = big;
-
-	cell->anchor = big;
-	for (int i = 0; i < cell->inlines.size(); i++) {
-		cell->inlines[i]->anchor = big;
-		cell->inlines[i]->next_node = big->id;
-	}
-
-
-	//	if (cell->anchor != NULL) {
-	//		cell->inlines[i]->anchor = cell->anchor;
-	//		continue;
-	//	}
-	//	if (cell->inlines[i]->energy > THRESHOLD) {  /* 식 성립 */
-	//		cell->anchor = cell->inlines[i];
-	//		cell->anchor->mode = ANCHOR;
-	//		cell->anchor->anchor = cell->anchor;
-	//	}
-	//}
-
-}
 
 void Simulator::find_inlines(Line line) {
 	for (int y = 0; y * G < FIELD_SIZE; y++) {
@@ -223,7 +202,7 @@ void Simulator::find_inlines(Line line) {
 	}
 }
 
-void init_cell(Cell* cell) {
+void Simulator::init_cell(Cell* cell) {
 	cell->anchor = NULL;
 	for (int i = 0; i < cell->inlines.size(); i++) {
 		cell->inlines[i]->mode = Mode::INLINE;
@@ -250,12 +229,20 @@ void Simulator::sensing_all()
 }
 
 
-void Simulator::transmit_nodes(Node* n) {
+void Simulator::transmit_packet(Node* n, unsigned int time) {
 	int data_size = 0;
 	double num_data = 0;
 
+	if (n->status != Status::ACTIVE)
+		return;
+	
+	if (!n->get_next_node()) 
+	{
+		return;
+	}
+
 	while(n->data_size	> 0) {
-		if (n->status == Status::BLACKOUT)
+		if (n->status != Status::ACTIVE)
 			break;
 
 		if (n->data_size > PACKET_PAYLOAD) {
@@ -276,34 +263,33 @@ void Simulator::transmit_nodes(Node* n) {
 			fprintf(stderr, "Packet size of %d is not current: %d\n", n->id, data_size);
 			exit(1);
 		}
+
 		Packet p = {
 			n->id,
-			n->next_node,
+			n->get_next_node()->id,
 			n->id,
 			data_size + PACKET_HEADER,
 			num_data,
+			time
 		};
 
-		if (find_node_by_id(n->next_node)->status != Status::ACTIVE) {
-			n->num_data += p.num_data;
-			n->data_size += p.num_data * PACKET_PAYLOAD;
-		}
-		else
-		{
-			network.push_back(p);
-		}
+		n->consume_energy(n->calc_send_energy(p.size));
+		if (n->status != Status::ACTIVE)
+			return;
+		//n->consume_receive_around_energy(p.size);
 
-		n->consume_energy(n->calc_send_energy(p.size) * n->neighbor.size());
-		n->consume_receive_around_energy(p.size);
+		network.push_back(p);
 	}
+
+	return;
 }
 
-void Simulator::transmit() {
+void Simulator::transmit(unsigned int time) {
 	int i = 0;
 	for (i = 0; i < NODES; i++) {
 		if (nodes[i]->mode == Mode::ANCHOR || nodes[i]->status != Status::ACTIVE)
 			continue;
-		transmit_nodes(nodes[i]);
+		transmit_packet(nodes[i], time);
 	}
 	
 }
@@ -314,7 +300,7 @@ void Simulator::transmitting() {
 	while (network.size() > 0) {
 		p = network.front();
 		network.pop_front();
-		receive_packet(find_node_by_id(p.to), p);
+		receive_packet(nodes[p.to], p);
 		//printf("%d\n", network.size());
 	}
 
@@ -323,34 +309,27 @@ void Simulator::transmitting() {
 void Simulator::receive_packet(Node* n, Packet p) {
 	double energy = 0;
 
-	if (n->status != Status::ACTIVE || n->mode == Mode::ANCHOR)
+	p.hop++;
+
+	if (n->mode == Mode::ANCHOR)
 	{
+		if (n->data_size > MEMORY)
+			return;
 		n->num_data += p.num_data;
-		n->data_size += p.num_data * PACKET_PAYLOAD;
-		return;
+		n->data_size += (p.size - PACKET_HEADER);
 	}
 
-	//if (n->mode == Mode::ANCHOR) {
-	//	n->num_data += p.num_data;
-	//	n->data_size += p.num_data * PACKET_PAYLOAD;
-	//	return;
-	//}
+	if (!n->get_next_node() || n->status != Status::ACTIVE || n->get_next_node()->status != Status::ACTIVE)
+		return;
 
 	p.from = n->id;
-	p.to = n->next_node;
+	p.to = n->get_next_node()->id;
 	
-	if (find_node_by_id(n->next_node)->status != Status::ACTIVE) {	
-		n->num_data += p.num_data;
-		n->data_size += p.num_data * PACKET_PAYLOAD;
-	}
-	else
-	{
-		network.push_back(p);
-	}
 
-	p.hop++;
-	n->consume_energy(n->calc_send_energy(p.size) * n->neighbor.size());
-	n->consume_receive_around_energy(p.size);
+	network.push_back(p);
+
+	n->consume_energy(n->calc_send_energy(p.size));
+	//n->consume_receive_around_energy(p.size);
 
 	return;
 }
@@ -362,161 +341,98 @@ void Simulator::calc_idle_energy(int time) {
 	}
 }
 
-void Simulator::anchor_move() {
-	for (int i = 0; i < cells.size(); i++) {
-		init_cell(cells[i]);
-		set_anchor(cells[i]);
-	}
-}
 
 void Simulator::collect_data() {
 	for (int i = 0; i < cells.size(); i++) {
-		if(cells[i]->anchor->status == Status::ACTIVE)
-			get_data_from_anchor(cells[i]->anchor);
+		get_data_from_anchor(cells[i]->anchor);
 	}
 }
 
 void Simulator::get_data_from_anchor(Node *n) {
 
+	double num_data;
+	int data_size = 0;
+
 	// 한 패킷을 보낼 때의 에너지
 	double packet_e = n->calc_send_energy(PACKET_HEADER + PACKET_PAYLOAD);
 
-	while (n->data_size > PACKET_PAYLOAD) {
+	if (n->status != Status::ACTIVE)
+		return;
+
+	while (n->data_size > 0)
+	{
+
+		if (n->data_size > PACKET_PAYLOAD) {
+			data_size = PACKET_PAYLOAD;
+			num_data = n->num_data * (double)data_size / n->data_size;
+
+			n->data_size -= data_size;
+			n->num_data -= num_data;
+		}
+		else {
+			data_size = n->data_size;
+			num_data = n->num_data;
+
+			n->data_size = 0;
+			n->num_data = 0;
+		}
+
+		if (data_size <= 0) {
+			fprintf(stderr, "Packet size of %d is not current: %d\n", n->id, data_size);
+			exit(1);
+		}
+
+		drone->data += data_size;
+		drone->size += num_data;
+
+		//n->consume_receive_around_energy(n->calc_send_energy(data_size+PACKET_HEADER));
+		
+		n->consume_energy(n->calc_send_energy(data_size + PACKET_HEADER));
+
+		if (n->status != Status::ACTIVE)
+			return;
+
+	}
+
+	/*while (n->data_size > PACKET_PAYLOAD) {
+
 		drone->data += PACKET_PAYLOAD;
 		n->data_size -= PACKET_PAYLOAD;
+
 		n->consume_receive_around_energy(packet_e);
-		if (!(n->consume_energy(packet_e * n->neighbor.size())))
+		if (!(n->consume_energy(packet_e * n->neighbor.size()))) {
+			n->num_data = n->num_data * (double)n->data_size / n->data_size;
 			return;
+		}
+			
 	}
 	drone->data += n->data_size;
 	n->consume_energy(n->calc_send_energy(n->data_size + PACKET_HEADER) * n->neighbor.size());
 	n->consume_receive_around_energy(n->data_size + PACKET_HEADER);
 	n->data_size = 0;
-	n->num_data = 0;
+	n->num_data = 0;*/
 }
 
 
-void Simulator::start_simulator(FILE *fp) {
-	int round;
-	int times;
-	int day;
-
-	for (day = 0; day < MONTH; day++) {
-		for (round = 0; round < DAY; round++) {
-			for (times = 0; times < HOUR/TR_CYCLE; times++) {
-				if(times % 2 == 0)
-					anchor_move();
-				sensing_all();
-				transmit();
-				transmitting();
-				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				write_data(fp, (day * DAY * (HOUR/TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times));
-			}
-			collect_data();
-			//for (int i = 0; i < NODES; i++) {
-			//	fprintf(fp, "%d \n", nodes[i]->data_size);
-			//}
-			//exit(0);
-			printf("-");
-			//print_field();
-			/*write_data(fp, day * DAY + round);*/
-		}
-		
-	}
-	write_data_s(fp);
-
-}
-
-void Simulator::line_shift() {
-	for (int i = 0; i < cells.size(); i++) {
-		for (int j = 0; j < cells[i]->inlines.size(); j++) {
-			cells[i]->anchor = NULL;
-			cells[i]->inlines[j]->mode = Mode::NORMAL;
-			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
-			cells[i]->inlines[j]->anchor = NULL;
-		}
-		delete cells[i];
-	}
-	cells.erase(cells.begin(), cells.end());
-
-	lines[1]->start -= W;
-	lines[1]->end -= W;
-
-	lines[2]->start += W;
-	lines[2]->end += W;
-
-	if (lines[1]->start < 0 || lines[2]->end > FIELD_SIZE) {
-		lines[1]->start = lines[2]->start = lines[0]->start;
-		lines[1]->end = lines[2]->end = lines[0]->end;
-
-		line_release();
-		find_inlines(*lines[0]);
-	}
-	else {
-		for (int i = 1; i < lines.size(); i++) {
-			find_inlines(*lines[i]);
-		}
-	}
-
-	routing_all();
-}
-
-void Simulator::line_release() {
-	for (int i = 0; i < NODES; i++) {
-		nodes[i]->line_is_right = !nodes[i]->line_is_right;
-	}
-
-}
 
 
-void Simulator::reverse_direct_in_cell() {
-	for (int i = 0; i < cells.size(); i++) {
-		for (int j = 0; j < cells[i]->inlines.size(); j++) {
-			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
-		}
-	}
-}
 
-void Simulator::start_simulator2(FILE *fp) {
-	int round;
-	int times;
-	int day;
+//void Simulator::reverse_direct_in_cell() {
+//	for (int i = 0; i < cells.size(); i++) {
+//		for (int j = 0; j < cells[i]->inlines.size(); j++) {
+//			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
+//		}
+//	}
+//}
 
-	line_release();
-	reverse_direct_in_cell();
-
-	for (day = 0; day < MONTH; day++) {
-		for (round = 0; round < DAY; round++) {
-			line_shift();
-			for (times = 0; times < HOUR / TR_CYCLE; times++) {
-				if (times % 2 == 0)
-					anchor_move();
-				sensing_all();
-				transmit();
-				transmitting();
-				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-			}
-			//for (int i = 0; i < NODES; i++) {
-			//	fprintf(fp, "%d \n", nodes[i]->data_size);
-			//}
-			//exit(0);
-			collect_data();
-			
-			printf("-");
-			/*write_data(fp, day * DAY + round);*/
-		}
-
-	}
-	write_data_s(fp);
-
-}
 
 void Simulator::print_field() {
 	int array1[FIELD_SIZE][FIELD_SIZE] = { 0, };
 	for (int i = 0; i < NODES; i++) {
-		if (nodes[i]->status == Status::ACTIVE)
+		if (nodes[i]->status == Status::ACTIVE && nodes[i]->line_is_right == true)
 			array1[nodes[i]->y][nodes[i]->x] = 1;
+		if (nodes[i]->status == Status::ACTIVE && nodes[i]->line_is_right == false)
+			array1[nodes[i]->y][nodes[i]->x] = 5;
 		if (nodes[i]->mode == Mode::INLINE)
 			array1[nodes[i]->y][nodes[i]->x] = 2;
 		else if (nodes[i]->mode == Mode::ANCHOR)
@@ -531,15 +447,18 @@ void Simulator::print_field() {
 
 			if (array1[i][j] == 1) {
 				//fprintf(fp, "%d,%d,%d\n", count, i, j);
-				std::cout << "■";
+				/*std::cout << "■";*/
+				std::cout << "→";
 				//count++;
 			}
 			else if (array1[i][j] == 2)
-				std::cout << "★";
-			else if (array1[i][j] == 3)
 				std::cout << "☆";
+			else if (array1[i][j] == 3)
+				std::cout << "★";
 			else  if (array1[i][j] == 4)
 				std::cout << "X ";
+			else if (array1[i][j] == 5)
+				std::cout << "←";
 			else {
 				std::cout << "  ";
 			}
@@ -570,75 +489,25 @@ void Simulator::write_data_s(FILE* fp) {
 	prevSinkdata = drone->data;
 }
 
-void Simulator::start_simulator3(FILE* fp) {
-	int round;
-	int times;
-	int day;
-
-	line_release();
-	reverse_direct_in_cell();
-
-
-	for (day = 0; day < MONTH; day++) {
-		for (round = 0; round < DAY; round++) {
-			print_field();
-			for (times = 0; times < HOUR / TR_CYCLE; times++) {
-				if (times % 2 == 0)
-					anchor_move();
-				
-				sensing_all();
-				transmit();
-				transmitting();
-				calc_idle_energy(day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-				write_data(fp, day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times);
-			}
-			//for (int i = 0; i < NODES; i++) {
-			//	fprintf(fp, "%d \n", nodes[i]->data_size);
-			//}
-			//exit(0);
-			collect_data();
-			line_shift2();
-			printf("-");
-			/*write_data(fp, day * DAY + round);*/
+void Simulator::reset_node() 
+{
+	routing_all();
+	for (int i = 0; i < NODES; i++)
+	{
+		if (nodes[i]->energy > nodes[i]->threshold) {
+			nodes[i]->status == Status::ACTIVE;
+			nodes[i]->baudrate = MAX_TRANSMIT;
 		}
-
 	}
-	write_data_s(fp);
-
 }
 
-void Simulator::line_shift2() {
-	for (int i = 0; i < cells.size(); i++) {
-		for (int j = 0; j < cells[i]->inlines.size(); j++) {
-			cells[i]->anchor = NULL;
-			cells[i]->inlines[j]->mode = Mode::NORMAL;
-			cells[i]->inlines[j]->line_is_right = !cells[i]->inlines[j]->line_is_right;
-			cells[i]->inlines[j]->anchor = NULL;
+void Simulator::reset_node2()
+{
+	for (int i = 0; i < NODES; i++)
+	{
+		if (nodes[i]->energy > nodes[i]->threshold) {
+			nodes[i]->status == Status::ACTIVE;
+			nodes[i]->baudrate = MAX_TRANSMIT;
 		}
-		delete cells[i];
 	}
-	cells.erase(cells.begin(), cells.end());
-
-	/*lines[1]->start -= static_w;
-	lines[1]->end -= static_w;*/
-
-	lines[0]->start += static_w;
-	lines[0]->end += static_w;
-
-	if (lines[0]->start < 0 || lines[0]->end > FIELD_SIZE) {
-		static_w = -static_w;
-
-		lines[0]->start = lines[0]->start + (2 * static_w);
-		lines[0]->end = lines[0]->end + (2 * static_w);
-
-		//line_release();
-		find_inlines(*lines[0]);
-	}
-	else {
-		//for (int i = 1; i < lines.size(); i++) {
-			find_inlines(*lines[0]);
-		//}
-	}
-	routing_all();
-	
 }

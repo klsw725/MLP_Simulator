@@ -7,24 +7,36 @@
 #include "simulator.h"
 
 int count = 0;
+
 int main(void) {
 	srand(time(NULL));
 	Simulator *simu = new Simulator();
-	Simulator* simu2 = new Simulator(simu);
-	Simulator* simu3 = new Simulator(simu);
-	FILE* fp1, *fp2, *fp3;
+
+	FILE* fp1, *fp2, *fp3, *fp4;
 	fp1 = fopen("OLP1000_10_5.csv", "w");
 	fp2 = fopen("MLP1000_10_5.csv", "w");
 	fp3 = fopen("SLP1000_10_5.csv", "w");
-	
-	//simu3->start_simulator3(fp3);
-	//std::cout << count << std::endl;
+	fp4 = fopen("CLP1000_10_5.csv", "w");
 
-	simu->start_simulator(fp1);
+	simu->start_lbdd_simulator(fp1);
 	std::cout << count << std::endl;
-	
-	simu2->start_simulator2(fp2);
+
+	Simulator* simu2 = new Simulator(simu);
+	simu2->start_simulator(fp2);
 	std::cout << count << std::endl;
-	
-	
+	delete simu2;
+
+	Simulator* simu3 = new Simulator(simu);
+	simu3->start_shift_simulator(fp3);
+	std::cout << count << std::endl;
+	delete simu3;
+
+	Simulator* simu4 = new Simulator(simu, 4);
+	simu4->start_larcms_simulator(fp4);
+	std::cout << count << std::endl;
+	delete simu4;
+
+	//ThreadSimul* test = new ThreadSimul();
+
+	//test->Run();
 }

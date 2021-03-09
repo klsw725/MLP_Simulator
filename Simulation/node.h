@@ -34,10 +34,13 @@ public:
 	double energy;				// 현재 남은 에너지 (J)
 
 	std::vector<Node*> neighbor;				// 이웃 노드 목록
-	//Node* next_node;							
-	int next_node;								// 다음 노드 ID								
+	Node* next_node;							
+	//int next_node;								// 다음 노드 ID								
 
 	bool line_is_right;								// 라인이 오른쪽인지 왼쪽인지	// 오른쪽이면 1 왼쪽이면 0
+	bool can_receive;								// 메모리에 따른 수신 가능 여부
+	double baudrate;								// 전송 최대 메모리 설정
+	double threshold;								// Node의 각각 Threshold
 
 	//std::queue<Packet*> memory;
 	//Packet* memory;
@@ -63,13 +66,14 @@ public:
 	bool consume_energy(double consume);
 	void consume_receive_around_energy(double size);
 
-	int routing();
+	Node* routing();
 	void sensing();
 	
 	/// /////////////////////////////////////////////////////////////////////////////////////
 	
 	//inline void set_id(int index) { id = index; }
 	inline void set_locate(int x1, int y1) { x = x1; y = y1; }
+	inline Node* get_next_node() { return next_node; }
 	
 private:
 	

@@ -20,8 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="drone.cpp" />
+    <ClCompile Include="larcms.cpp" />
+    <ClCompile Include="lbdd.cpp" />
+    <ClCompile Include="line_shift.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
+    <ClCompile Include="scheme.cpp" />
     <ClCompile Include="simulator.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +150,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/Zm2000 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

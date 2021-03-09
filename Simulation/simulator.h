@@ -37,35 +37,31 @@ public:
 
 	void create_field();
 	void init_nodes();
+	void init_cell(Cell* cell);
 
 	void find_inlines(Line line);
-	void set_anchor(Cell* cell);
+
 
 	void routing_all();
 
 	Node* find_node_by_id(int id);
 
+	void reset_node();
+	void reset_node2();
+
 	void sensing_all();
-	void transmit();
-	void transmit_nodes(Node* n);
+	void transmit(unsigned int time);
+	void transmit_packet(Node* n, unsigned int time);
 	void transmitting();
 	void receive_packet(Node *n, Packet p);
 
 	void calc_idle_energy(int time);
 
-	void anchor_move();
-
 	void collect_data();
 	void get_data_from_anchor(Node *n);
+	double get_distance(double x1, double y1, double x2, double y2);
 
-	void line_shift();
-	void line_shift2();
-	void line_release();
-	void reverse_direct_in_cell();
-
-	void start_simulator(FILE *fp);
-	void start_simulator2(FILE *fp);
-	void start_simulator3(FILE* fp);
+	//void reverse_direct_in_cell();
 
 	void print_field();
 	void write_data(FILE* fp, int round);
@@ -73,10 +69,42 @@ public:
 
 	std::deque<Packet> network;
 
+	/* LBDD */
+	//////////////////////////////////////////////////////////////////////
+	void set_random_anchor(Cell* cell);
+	void anchor_random_move();
+	void start_lbdd_simulator(FILE* fp);
+	//////////////////////////////////////////////////////////////////////
+
+	/* Proposed Scheme */
+	///////////////////////////////////////////////////////////////////////
+	void set_anchor(Cell* cell);
+	void anchor_move();
+	void line_shift();
+	void line_release();
+	void start_simulator(FILE* fp);
+	///////////////////////////////////////////////////////////////////////
+
+	/* Line Shift */
+	///////////////////////////////////////////////////////////////////////
+	void line_shift2();
+	void reverse_direct_in_cell_first();
+	void start_shift_simulator(FILE* fp);
+	///////////////////////////////////////////////////////////////////////
+	
+	/* LARCMS */
+	/// ///////////////////////////////////////////////////////////////////
+
+	Simulator(Simulator* simu, int num);
+	double table[NODES][NODES] = { 0, };
+	void calc_vec_table();
+	void make_cross(Line* line);
+	void routing_all2();
+	Node* find_short_inline(Node* node);
+
+	void start_larcms_simulator(FILE* fp);
+
 private:
 };
-
-void transmit_nodes(Node* n);
-
 
 #endif
