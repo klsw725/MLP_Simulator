@@ -32,6 +32,11 @@ public:
 	Mode mode;
 
 	double energy;				// 현재 남은 에너지 (J)
+	double prevEnergy;			// 이전 에너지 (J)
+	double prevHarvest;			// 이전 Harvest 에너지 (J)
+
+	double avgEnergy;			// 평균 에너지
+	double avgHarvest;			// 평균 Harvest 에너지지
 
 	std::vector<Node*> neighbor;				// 이웃 노드 목록
 	Node* next_node;							
@@ -39,8 +44,12 @@ public:
 
 	bool line_is_right;								// 라인이 오른쪽인지 왼쪽인지	// 오른쪽이면 1 왼쪽이면 0
 	bool can_receive;								// 메모리에 따른 수신 가능 여부
+	bool can_transmit;								// 전송 가능?
+
 	double baudrate;								// 전송 최대 메모리 설정
 	double threshold;								// Node의 각각 Threshold
+
+	int numblackout;
 
 	//std::queue<Packet*> memory;
 	//Packet* memory;
@@ -52,8 +61,8 @@ public:
 	Node* anchor;								// 앵커 노드(인라인 노드에서 사용) ID
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	static std::vector<double>solar;
-	inline static std::vector<double>& getsolar() { return solar; }
+	static std::vector<long double>solar;
+	inline static std::vector<long double>& getsolar() { return solar; }
 
 	double calc_send_energy(double size);
 	double calc_recv_energy(double size);

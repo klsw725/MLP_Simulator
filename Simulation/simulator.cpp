@@ -12,6 +12,7 @@
 
 Simulator::Simulator() {
 	prevSinkdata = 0;
+	double cantTransmitNodes = 0;
 
 	lines.push_back(new Line());
 	lines[0]->start = (FIELD_SIZE / W) / 2 * W;
@@ -40,6 +41,11 @@ Simulator::Simulator() {
 		Node::getsolar().push_back(atof(inp));
 	}
 	fclose(fp);
+
+	for (int i = 0; i < NODES; i++)
+	{
+		nodes[i]->prevHarvest = Node::getsolar()[0];
+	}
 }
 
 Simulator::Simulator(Simulator* simu) {
@@ -236,8 +242,10 @@ void Simulator::transmit_packet(Node* n, unsigned int time) {
 	if (n->status != Status::ACTIVE)
 		return;
 	
-	if (!n->get_next_node()) 
+	if (!n->get_next_node() || n->get_next_node()->status != Status::ACTIVE || !n->get_next_node()->can_receive) 
 	{
+		if (!n->get_next_node() || n->get_next_node()->status != Status::ACTIVE)
+			n->can_transmit = false;
 		return;
 	}
 
@@ -274,11 +282,18 @@ void Simulator::transmit_packet(Node* n, unsigned int time) {
 		};
 
 		n->consume_energy(n->calc_send_energy(p.size));
+		n->consume_receive_around_energy(p.size);
 		if (n->status != Status::ACTIVE)
 			return;
-		//n->consume_receive_around_energy(p.size);
 
 		network.push_back(p);
+
+		n->baudrate -= p.size;
+		if (n->baudrate < 0)
+		{
+			n->status = Status::SLEEP;
+			return;
+		}
 	}
 
 	return;
@@ -307,29 +322,58 @@ void Simulator::transmitting() {
 }
 
 void Simulator::receive_packet(Node* n, Packet p) {
-	double energy = 0;
 
 	p.hop++;
 
 	if (n->mode == Mode::ANCHOR)
 	{
-		if (n->data_size > MEMORY)
-			return;
+		//if (n->data_size + (p.size - PACKET_HEADER) > MEMORY)
+		//	return;
 		n->num_data += p.num_data;
 		n->data_size += (p.size - PACKET_HEADER);
+
+		n->baudrate -= p.size;
+		if (n->baudrate < 0)
+		{
+			n->status = Status::SLEEP;
+			return;
+		}
+
+		return;
 	}
 
-	if (!n->get_next_node() || n->status != Status::ACTIVE || n->get_next_node()->status != Status::ACTIVE)
+	//if (n->data_size + (p.size - PACKET_HEADER) > MEMORY)
+	//{
+	//	n->can_receive = false;
+	//	return;
+	//}
+
+	if (!n->get_next_node() || n->get_next_node()->status != Status::ACTIVE || !n->get_next_node()->can_receive)
+	{
+		if (!n->get_next_node() || n->get_next_node()->status != Status::ACTIVE)
+			n->can_transmit = false;
+		n->num_data += p.num_data;
+		n->data_size += (p.size - PACKET_HEADER);
 		return;
+	}
 
 	p.from = n->id;
 	p.to = n->get_next_node()->id;
-	
+
+	n->consume_energy(n->calc_send_energy(p.size));
+	n->consume_receive_around_energy(p.size);
+
+	if (n->status != Status::ACTIVE)
+		return;
 
 	network.push_back(p);
 
-	n->consume_energy(n->calc_send_energy(p.size));
-	//n->consume_receive_around_energy(p.size);
+	n->baudrate -= p.size;
+	if (n->baudrate < 0)
+	{
+		n->status = Status::SLEEP;
+		return;
+	}
 
 	return;
 }
@@ -384,10 +428,9 @@ void Simulator::get_data_from_anchor(Node *n) {
 
 		drone->data += data_size;
 		drone->size += num_data;
-
-		//n->consume_receive_around_energy(n->calc_send_energy(data_size+PACKET_HEADER));
 		
 		n->consume_energy(n->calc_send_energy(data_size + PACKET_HEADER));
+		n->consume_receive_around_energy(data_size+PACKET_HEADER);
 
 		if (n->status != Status::ACTIVE)
 			return;
@@ -475,9 +518,12 @@ void Simulator::write_data(FILE *fp, int round) {
 	for (int i = 0; i < NODES; i++) {
 		if (nodes[i]->status == Status::BLACKOUT)
 			num_blackout++;
+		if (nodes[i]->can_transmit == false)
+			cantTransmitNodes++;
 	}
 
-	fprintf(fp, "%d, %d, %lf\n", round, num_blackout, num_sinkdata);
+	fprintf(fp, "%d, %d, %lf, %d\n", round, num_blackout, num_sinkdata, cantTransmitNodes);
+	cantTransmitNodes = 0;
 	prevSinkdata = drone->data;
 }
 
@@ -485,29 +531,32 @@ void Simulator::write_data_s(FILE* fp) {
 	double num_sinkdata = 0;
 	num_sinkdata = drone->data - prevSinkdata;
 
-	fprintf(fp, "0, 0, %lf\n", num_sinkdata);
+	fprintf(fp, "0, 0, %lf, 0\n", num_sinkdata);
 	prevSinkdata = drone->data;
 }
 
 void Simulator::reset_node() 
 {
-	routing_all();
 	for (int i = 0; i < NODES; i++)
 	{
-		if (nodes[i]->energy > nodes[i]->threshold) {
-			nodes[i]->status == Status::ACTIVE;
-			nodes[i]->baudrate = MAX_TRANSMIT;
+		nodes[i]->can_transmit = true;
+		//if (nodes[i]->data_size < MEMORY)
+		//{
+		//	nodes[i]->can_receive = true;
+		//}
+
+		nodes[i]->baudrate = MAX_TRANSMIT;
+
+		if (nodes[i]->energy >= BLACKOUT_ENERGY) 
+		{
+			nodes[i]->status = Status::ACTIVE;
 		}
 	}
 }
 
-void Simulator::reset_node2()
-{
+void Simulator::write_total_field(FILE* fp) {
 	for (int i = 0; i < NODES; i++)
 	{
-		if (nodes[i]->energy > nodes[i]->threshold) {
-			nodes[i]->status == Status::ACTIVE;
-			nodes[i]->baudrate = MAX_TRANSMIT;
-		}
+		fprintf(fp, "%d, %d, %d, %d\n", nodes[i]->id, nodes[i]->x, nodes[i]->y, nodes[i]->numblackout);
 	}
 }

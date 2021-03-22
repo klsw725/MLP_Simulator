@@ -35,6 +35,8 @@ public:
 	Drone *drone;
 	double prevSinkdata;
 
+	int cantTransmitNodes;
+
 	void create_field();
 	void init_nodes();
 	void init_cell(Cell* cell);
@@ -47,7 +49,6 @@ public:
 	Node* find_node_by_id(int id);
 
 	void reset_node();
-	void reset_node2();
 
 	void sensing_all();
 	void transmit(unsigned int time);
@@ -66,6 +67,8 @@ public:
 	void print_field();
 	void write_data(FILE* fp, int round);
 	void write_data_s(FILE* fp);
+
+	void write_total_field(FILE* fp);
 
 	std::deque<Packet> network;
 

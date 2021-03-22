@@ -98,7 +98,7 @@ void Simulator::start_larcms_simulator(FILE* fp) {
 		for (round = 0; round < DAY; round++) {
 			for (times = 0; times < HOUR / TR_CYCLE; times++) {
 				unsigned int time = day * DAY * (HOUR / TR_CYCLE) + (round * (HOUR / TR_CYCLE)) + times;
-				reset_node2();
+				reset_node();
 				if (times % 2 == 0)
 					anchor_random_move();
 				sensing_all();

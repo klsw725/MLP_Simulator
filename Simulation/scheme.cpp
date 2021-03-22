@@ -7,7 +7,7 @@ void Simulator::set_anchor(Cell* cell) {
 	Node* node1 = NULL;
 
 	for (int i = 0; i < cell->inlines.size(); i++) {
-		if (cell->inlines[i]->energy > THRESHOLD) {
+		if (cell->inlines[i]->energy > cell->inlines[i]->threshold) {
 			temp.push(cell->inlines[i]);
 		}
 	}
